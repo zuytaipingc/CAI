@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.device.mapper.DeviceTypeMapper">
+
+
+
+<!--    新增-->
+    <insert id="insertDeviceType" parameterType="DeviceType">
+        INSERT INTO device_type(type_name,type_remark,type_status,create_by,create_time)
+        VALUES(#{typeName},#{typeRemark},#{typeStatus},#{createBy},#{createTime})
+
+
+    </insert>
+
+<!--    修改-->
+    <update id="updateDeviceType" parameterType="DeviceType">
+        UPDATE device_type SET type_name=#{typeName},type_remark=#{typeRemark},type_status=#{typeStatus},
+                               update_by=#{updateBy},update_time=#{updateTime}
+                           WHERE type_id=#{typeId}
+
+    </update>
+    <!--属性id：唯一标识，type是java中的类型
+          元素id:映射主键列表
+          元素result:映射普通字段
+          column表中的字段名，propert类中的属性名，-->
+    <resultMap id="baseDeviceType" type="DeviceType">
+        <id column="type_id" property="typeId"></id>
+        <result column="type_name" property="typeName"></result>
+        <result column="type_remark" property="typeRemark"></result>
+        <result column="type_status" property="typeStatus"></result>
+        <result column="create_by" property="createBy"></result>
+        <result column="create_time" property="createTime"></result>
+        <result column="update_by" property="updateBy"></result>
+        <result column="update_time" property="updateTime"></result>
+    </resultMap>
+    <!--查询所有
+        自动映射：表中字段名和类中属性名一致
+            给字段起别名type_id as typeId
+        手动映射：使用resultmap手动映射
+    -->
+    <select id="selectDeviceTypeList" resultMap="baseDeviceType">
+        SELECT type_id,type_name,type_remark,type_status,create_by,create_time,
+               update_by,update_time FROM device_type
+
+    </select>
+
+<!--    根据id查询-->
+<select id="selectDeviceTypeId" parameterType="long" resultMap="baseDeviceType">
+    SELECT type_id,type_name,type_remark,type_status,create_by,create_time,
+           update_by,update_time FROM device_type where type_id=#{typeId}
+
+</select>
+<!--    根据id删除-->
+    <update id="deleteDeviceTypeById" parameterType="long">
+        update device_type set type_status=1 where type_id=#{typeId}
+    </update>
+</mapper>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.device.mapper.DeviceInfoMapper">
+
+
+    <!--    新增
+    获取新增的id值
+    获取id自增的值：获取到主键值存储到参数对象中，存储deviceInfo对象的deviceId属性中
+    useGeneratedKeys=“true”：开启主键生成策略
+    keyProperty="deviceId：指定主键列所对应的属性名
+    -->
+
+    <insert id="insertDeviceInfo" parameterType="DeviceInfo"
+            useGeneratedKeys="true" keyProperty="deviceId">
+        INSERT INTO device_info(type_id, device_name, device_model, device_img, device_remark,
+                                device_status, create_by, create_time)
+        VALUES (#{typeId}, #{deviceName}, #{deviceModel}, #{deviceImg},
+                #{deviceRemark}, #{deviceStatus}, #{createBy}, #{createTime})
+
+    </insert>
+
+
+    <!-- 修改：如果属性值为空，则不修改改属性(使用动态sql) -->
+    <update id="updateDeviceInfo" parameterType="DeviceInfo">
+        update device_info
+        <!-- set type_id=1,device_name=2,... -->
+        <trim prefix="set" suffixOverrides=",">
+            <if test="typeId!=null">type_id=#{typeId},</if>
+            <if test="deviceName!=null and deviceName!='' ">device_name=#{deviceName},</if>
+            <if test="deviceModel!=null and deviceModel!='' ">device_model=#{deviceModel},</if>
+            <if test="deviceImg!=null and deviceImg!='' ">device_img=#{deviceImg},</if>
+            <if test="deviceRemark!=null and deviceRemark!='' ">device_remark=#{deviceRemark},</if>
+            <if test="deviceStatus!=null">device_status=#{deviceStatus},</if>
+            <if test="createBy!=null">create_by=#{createBy},</if>
+            <if test="createTime!=null">create_time=#{createTime},</if>
+            <if test="updateBy!=null">update_by=#{updateBy},</if>
+            <if test="updateTime!=null">update_time=#{updateTime},</if>
+        </trim>
+        where device_id=#{deviceId}
+    </update>
+
+    <!--    多条件查询-->
+    <select id="selectDeviceInfoList" parameterType="DeviceInfo" resultMap="baseDeviceInfo">
+        SELECT i.device_id,i.type_id,i.device_name,i.device_model,i.device_img,
+        i.device_remark,i.device_status,i.create_by,i.create_time,i.update_by,
+        i.update_time,t.type_name
+        FROM device_info i LEFT JOIN device_type t ON i.type_id=t.type_id
+        -- where 字段1=值1 and/or 字段2=值2
+        <where>
+            <if test="typeId!=null">and i.type_id = #{typeId}</if>
+            <if test="deviceName!=null and deviceName!='' ">and i.device_name
+                like concat('%',#{deviceName},'%')
+            </if>
+            <if test="deviceModel!=null and deviceModel!='' ">and i.device_model
+                like concat('%',#{deviceModel},'%')
+            </if>
+            <if test="deviceStatus!=null">and i.device_status
+                =#{deviceStatus}
+            </if>
+        </where>
+    </select>
+    <!--    使用resultMap手动映射-->
+    <resultMap id="baseDeviceInfo" type="DeviceInfo">
+        <id column="device_id" property="deviceId"></id>
+        <result column="type_id" property="typeId"></result>
+        <result column="device_name" property="deviceName"></result>
+        <result column="device_model" property="deviceModel"></result>
+        <result column="device_img" property="deviceImg"></result>
+        <result column="device_remark" property="deviceRemark"></result>
+        <result column="device_status" property="deviceStatus"></result>
+        <result column="create_by" property="createBy"></result>
+        <result column="create_time" property="createTime"></result>
+        <result column="update_by" property="updateBy"></result>
+        <result column="update_time" property="updateTime"></result>
+        <result column="type_name" property="typeName"></result>
+
+
+    </resultMap>
+
+<!--    根据id查询-->
+    <select id="selectDeviceInfoById" parameterType="long" resultMap="baseDeviceInfo">
+        SELECT i.device_id,i.type_id,i.device_name,i.device_model,i.device_img,
+               i.device_remark,i.device_status,i.create_by,i.create_time,i.update_by,
+               i.update_time
+        FROM device_info i where device_id=#{deviceId}
+    </select>
+
+<!--    根据id删除：物理删除-->
+        <delete id="deleteDeviceInfo" parameterType="long">
+            delete from device_info where device_id=#{deviceId}
+        </delete>
+</mapper>
