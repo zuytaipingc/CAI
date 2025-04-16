@@ -23,7 +23,7 @@ public interface DeviceTypeMapper {
     public int updateDeviceType(DeviceType deviceType);
 
     /**
-     *
+     *列表功能
      * @param
      * @return
      */

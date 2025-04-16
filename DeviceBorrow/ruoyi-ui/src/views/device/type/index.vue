@@ -1,37 +1,60 @@
 <template>
     <div class="container">
         <h1>分类管理</h1>
-        <button @click="show = !show; title = '新增'">新增</button>
+        <el-button type="primary" plain size="small" @click="show = !show; title = '新增'">新增</el-button>
         <!-- 展示数据 -->
-        <table border="1px" width="500px">
-            <tr>
-                <td>主键</td>
-                <td>名称</td>
-                <td>说明</td>
-                <td>状态</td>
-                <td>操作</td>
-            </tr>
-            <tr v-for="deviceType in deviceTypeList" :key="deviceType.typeId">
-                <td>{{ deviceType.typeId }}</td>
-                <td>{{ deviceType.typeName }}</td>
-                <td>{{ deviceType.typeRemark }}</td>
-                <td>
-                    <span v-if="deviceType.typeStatus == 0" style="color:green">正常</span>
-                    <span v-if="deviceType.typeStatus == 1" style="color:orange">禁用</span>
-                    <span v-if="deviceType.typeStatus == -1" style="color:red">删除</span>
+        <el-table :data="deviceTypeList" border style="width: 100%">
+            <el-table-column fixed prop="typeId" label="主键" width="50">
+            </el-table-column>
+            <el-table-column prop="typeName" label="名称" width="150">
+            </el-table-column>
+            <el-table-column prop="typeRemark" label="说明">
+            </el-table-column>
+            <el-table-column prop="typeStatus" label="状态" width="150">
+                <template slot-scope="scope">
+                    <span v-if="scope.row.typeStatus == 0" style="color: green;">正常</span>
+                    <span v-if="scope.row.typeStatus == 1" style="color: orange;">禁用</span>
+                    <span v-if="scope.row.typeStatus == -1" style="color: red;">删除</span>
+                </template>
+            </el-table-column>
 
+            <el-table-column fixed="right" label="操作" width="200">
+                <template slot-scope="scope">
+                    <el-button @click="showDeviceType(scope.row.typeId)" type="primary" size="small">修改</el-button>
+                    <el-button @click="deleteDeviceType(scope.row.typeId, scope.row.typeStatus)" type="danger"
+                        size="small">删除</el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+        <!-- 新增或修改弹框 -->
+        <el-dialog :title="title" :visible.sync="show" width="50%" :before-close="handleClose">
+            <!-- 表单：model绑定表单对象，rules表单验证、ref：获取表单的dom对象 label-width：宽度 -->
+            <el-form :model="deviceType" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+                <el-form-item label="名称" prop="typeName">
+                    <el-input v-model="deviceType.typeName"></el-input>
+                </el-form-item>
+                <el-form-item label="说明" prop="typeRemark">
+                    <el-input v-model="deviceType.typeRemark"></el-input>
+                </el-form-item>
+                <el-form-item label="状态" prop="typeStatus">
+                    <el-radio-group v-model="deviceType.typeStatus">
+                        <el-radio :label="0">正常</el-radio>
+                        <el-radio :label="1">禁用</el-radio>
+                        <el-radio :label="-1">删除</el-radio>
 
-                </td>
-
-                <!-- <td>{{ deviceType.typeStatus }}</td> -->
-                <td>
-                    <button @click="showDeviceType(deviceType.typeId)">修改</button>
-                    <button @click="deleteDeviceType(deviceType.typeId)">删除</button>
-                </td>
-            </tr>
-        </table>
-
-        <!-- 显示弹框 -->
+                    </el-radio-group>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="submitForm('ruleForm')">{{title}}</el-button>
+                    <el-button @click="resetForm('ruleForm')">重置</el-button>
+                </el-form-item>
+            </el-form>
+            <!-- 
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="show = false">取 消</el-button>
+                <el-button type="primary" @click="show = false">确 定</el-button>
+            </span> -->
+        </el-dialog>
         <div v-if="show">
             <h2>{{ title }}分类</h2>
             <form>
@@ -60,35 +83,49 @@ export default {
             show: false,//控制弹框的显示和隐藏（false
             deviceTypeList: [{ "typeId": 1, "typeName": "ceshi01", "typeRemark": "说明1", "typeStatus": 0 },
             { "typeId": 2, "typeName": "ceshi02", "typeRemark": "说明2", "typeStatus": 1 },
-            { "typeId": 3, "typeName": "ceshi03", "typeRemark": "说明3", "typeStatus": -1 }]
+            { "typeId": 3, "typeName": "ceshi03", "typeRemark": "说明3", "typeStatus": -1 }],
+            rules: {
+                typeName: [{ required: true, message: '请输入分类名称', trigger: 'blur' },],
+                typeStatus: [{ required: true, message: '请选择分类状态', trigger: 'blur' },],
+            }
         }
     },
-    created(){//vue生命周期函数：在vue对象创建后执行
+    created() {//vue生命周期函数：在vue对象创建后执行
         this.getData()//调用获取数据的方法
 
     },
     methods: {
         //获取数据库中的分类列表
-        getData(){
+        getData() {
             //请求后端API
             axios.get("http://localhost:8080/device/type/list")
-            .then(response=>{//请求成功
-                console.log(response);
-                // 将分类列表的值赋值给数组
-                this.deviceTypeList = response.data.data
-                
-            })
-            .catch(error=>{//请求失败
-                console.log(error);
-                
+                .then(response => {//请求成功
+                    console.log(response);
+                    // 将分类列表的值赋值给数组
+                    this.deviceTypeList = response.data.data
 
-            })
+                })
+                .catch(error => {//请求失败
+                    console.log(error);
+
+
+                })
         },
         //编写方法
         // 新增分类的方法
         addOrUpdate() {
             //typeId:有值就是修改，没有值就是新增
             if (this.deviceType.typeId == null) {
+                //请求后端接口，实现新增
+                axios.post("http://localhost:8080/device/type/add", this.deviceType)
+                    .then(response => {
+                        alert(response.data.msg)
+                        //查询所有
+                        this.getData()
+                    }).catch(err => {
+                        console.log(err);
+
+                    })
                 //typeId 随机生成整数
                 // parseInt:将字符串转成为整数
                 this.deviceType.typeId = parseInt(Math.random() * 100)
@@ -100,15 +137,16 @@ export default {
                 this.deviceType = {}
 
             } else {//有值是修改
-                //修改数据：遍历数组。查找需要修改的数据，赋值到数组中
-                for (let i = 0; i < this.deviceTypeList.length; i++) {//遍历数组
-                    if (this.deviceTypeList[i].typeId == this.deviceType.typeId) {//查找需要修改的数据，
-                        this.deviceTypeList[i] = this.deviceType   //赋值到数组中
+                //修改数据：调用后端接口，实现修改
+                axios.post("http://localhost:8080/device/type/edit", this.deviceType)
+                    .then(response => {
+                        alert(response.data.msg)
+                        //查询所有
+                        this.getData()
+                    }).catch(err => {//请求报错的处理函数
+                        console.log(err);
 
-                    }
-
-                }
-
+                    })
             }
             //隐藏弹框
             this.show = false
@@ -123,34 +161,65 @@ export default {
             //显示弹框
             this.show = true
             //回显数据：循环数组 查找需要修改的数据 赋值给表单对象deviceType
-            for (let i = 0; i < this.deviceTypeList.length; i++) {//循环数组deviceTypeList
-                if (this.deviceTypeList[i].typeId == typeId) {//查找需要修改的数据
-                    this.deviceType.typeId = this.deviceTypeList[i].typeId
-                    this.deviceType.typeName = this.deviceTypeList[i].typeName//赋值给表单对象deviceType
-                    this.deviceType.typeRemark = this.deviceTypeList[i].typeRemark//赋值给表单对象deviceType
-                    this.deviceType.typeStatus = this.deviceTypeList[i].typeStatus//赋值给表单对象deviceType
+            axios.get("http://localhost:8080/device/type/get?typeId=" + typeId)
+                .then(response => {//请求成功的处理函数
+                    this.deviceType = response.data.data
+                }).catch(err => {//请求报错的处理函数
+                    console.log(err);
 
-                }
-
-            }
+                })
 
         },
         //删除
-        deleteDeviceType(typeId){
-            //弹出删除确认的对话框
-            if (confirm("确定删除该数据吗？")) {
-                // 删除操作：遍历数组，查找需要删除的数据，删除操作
-                for (let i = 0; i < this.deviceTypeList.length; i++) {
-                    if(this.deviceTypeList[i].typeId == typeId){
-                        //splice(i,1):从下标i开始删除1个元素
-                        this.deviceTypeList.splice(i,1)//删除操作
-                        alert("删除成功")
-                    }
-                    
+        deleteDeviceType(typeId, typeStatus) {
+            //
+            if (typeStatus == -1) {
+                alert("此数据已经是删除状态！")
+            } else {
+                //弹出删除确认的对话框
+                if (confirm("确定删除该数据吗？")) {
+                    // 删除操作：请求后端接口，进行删除操作
+                    axios.get("http://localhost:8080/device/type/remove?typeId=" + typeId)
+                        .then(response => {
+                            alert(response.data.msg)//弹出删除信息
+                            //查询所有
+                            this.getData()
+                        }).catch(err => {
+                            console.log(err);
+
+                        })
+
                 }
+
             }
 
-        }
+
+
+        },
+        //弹框关闭函数
+        handleClose(done) {
+            this.$confirm('确认关闭？')
+                .then(_ => {
+                    done();
+                })
+                .catch(_ => { });
+        },
+        //表单提交
+        submitForm(formName) {
+        this.$refs[formName].validate((valid) => {//表单验证
+          if (valid) {//验证通过
+            //执行修改、删除操作
+            this.addOrUpdate()
+          } else {//验证未通过
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      },
+      resetForm(formName) {//表单重置
+        this.$refs[formName].resetFields();
+      }
+
 
     }
 }

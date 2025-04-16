@@ -3,8 +3,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.device.mapper.DeviceTypeMapper">
 
-
-
 <!--    新增-->
     <insert id="insertDeviceType" parameterType="DeviceType">
         INSERT INTO device_type(type_name,type_remark,type_status,create_by,create_time)
@@ -53,6 +51,6 @@
 </select>
 <!--    根据id删除-->
     <update id="deleteDeviceTypeById" parameterType="long">
-        update device_type set type_status=1 where type_id=#{typeId}
+        update device_type set type_status=-1 where type_id=#{typeId}
     </update>
 </mapper>
