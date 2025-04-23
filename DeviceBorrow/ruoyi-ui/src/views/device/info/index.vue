@@ -26,6 +26,8 @@
             <el-form-item>
                 <el-button type="primary" @click="onSubmit">查询</el-button>
                 <el-button type="primary" @click="dialogVisible = true, title = '新增'">新增</el-button>
+                <el-button type="primary" @click="exportDeviceInfo">导出</el-button>
+
 
             </el-form-item>
         </el-form>
@@ -58,9 +60,8 @@
             </el-table-column>
             <el-table-column fixed="right" label="操作" width="200">
                 <template slot-scope="scope">
-                    <el-button @click="showDeviceType(scope.row.typeId)" type="primary" size="small">修改</el-button>
-                    <el-button @click="deleteDeviceType(scope.row.typeId, scope.row.typeStatus)" type="danger"
-                        size="small">删除</el-button>
+                    <el-button @click="showDeviceInfo(scope.row.deviceId)" type="primary" size="small">修改</el-button>
+                    <el-button @click="deleteDeviceInfo(scope.row.deviceId)" type="danger" size="small">删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -150,23 +151,87 @@ export default {
         }
     },
     methods: { //定义方法、函数
+        exportDeviceInfo() {
+            //导出excel，调用后端接口
+            axios.post("http://localhost:8080/device/info/export", this.deviceInfo, { responseType: "blob" })//设置响应类型为blob二进制类型，用于文件下载
+                .then(response => {
+                    //创建url对象
+                    const url = window.URL.createObjectURL(new Blob([response.data]))
+                    //创建a标签
+                    const link = document.createElement("a")
+                    //设置链接
+                    link.href = url
+                    //设置下载属性
+                    link.setAttribute("download", "设备信息.xlsx")
+                    //将a标签添加到页面中
+                    document.body.append(link)
+                    //模拟点击
+                    link.click()
+                    //移除a标签
+                    document.body.removeChild(link)
+                    //移除url
+                    window.URL.revokeObjectURL(url)
+                }).catch(err => {
+                    console.log(err);
+
+                })
+
+        },
+        deleteDeviceInfo(deviceId) {
+            //调用删除接口 实现删除操作
+            if (confirm("确定删除该条数据吗？")) {
+                axios.delete("http://localhost:8080/device/info/" + deviceId)
+                    .then(response => {
+                        alert(response.data.msg)
+                        this.getData()//刷新数据
+                    }).catch(err => {
+                        console.log(err);
+
+                    })
+            }
+        },
+        showDeviceInfo(deviceId) {
+            //调用后端接口，回显数据
+            axios.get("http://localhost:8080/device/info/" + deviceId)
+                .then(response => {
+                    this.ruleForm = response.data.data//给表单对象赋值
+                    this.dialogVisible = true // 显示弹框
+                    this.title = "修改"  //修改title
+                }).catch(err => {
+                    console.log(err);
+
+                })
+
+        },
         submitForm(formName) {//新增、修改表单提交函数
             this.$refs[formName].validate((valid) => {//表单验证
                 if (valid) {
                     // 验证通过：新增、修改操作
                     // 判断是新增或者是修改操作：deviceId是否有值
-                    if (this.deviceInfo.deviceId == null) {
+                    if (this.ruleForm.deviceId == null) {
                         //新增操作：调用后端新增接口，实现数据的新增
                         axios.post("http://localhost:8080/device/info", this.ruleForm)
                             .then(response => {
                                 alert(response.data.msg) //弹出操作信息
                                 this.dialogVisible = false// 关闭对话框
-                                this.resetForm = {}// 清理表单
+                                this.ruleForm = {}// 清理表单
                                 this.getData()// 调用getData方法,刷新数据
 
                             }).catch(err => {
                                 console.log(err);
 
+                            })
+                    } else {
+                        //修改操作
+                        axios.put("http://localhost:8080/device/info", this.ruleForm)
+                            .then(response => {
+                                alert(response.data.msg) //弹出操作信息
+                                this.dialogVisible = false// 关闭对话框
+                                this.ruleForm = {}// 清理表单
+                                this.getData()// 调用getData方法,刷新数据
+
+                            }).catch(err => {
+                                console.log(err);
                             })
                     }
                 } else {

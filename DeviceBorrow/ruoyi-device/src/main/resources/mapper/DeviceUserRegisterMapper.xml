@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.device.mapper.DeviceUserRegisterMapper">
+
+    <resultMap type="DeviceUserRegister" id="DeviceUserRegisterResult">
+        <result property="regId" column="reg_id"/>
+        <result property="regDeptId" column="reg_dept_id"/>
+        <result property="regDept" column="reg_dept"/>
+        <result property="regCode" column="reg_code"/>
+        <result property="regName" column="reg_name"/>
+        <result property="regMobile" column="reg_mobile"/>
+        <result property="regPassword" column="reg_password"/>
+        <result property="regOpenid" column="reg_openid"/>
+        <result property="regStatus" column="reg_status"/>
+        <result property="regRemark" column="reg_remark"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectDeviceUserRegisterVo">
+        select reg_id,
+               reg_dept_id,
+               reg_dept,
+               reg_code,
+               reg_name,
+               reg_mobile,
+               reg_password,
+               reg_openid,
+               reg_status,
+               reg_remark,
+               create_by,
+               create_time,
+               update_by,
+               update_time
+        from device_user_register
+    </sql>
+
+    <select id="selectDeviceUserRegisterList" parameterType="DeviceUserRegister" resultMap="DeviceUserRegisterResult">
+        <include refid="selectDeviceUserRegisterVo"/>
+        <where>
+            <if test="regCode != null  and regCode != ''">and reg_code = #{regCode}</if>
+            <if test="regName != null  and regName != ''">and reg_name like concat('%', #{regName}, '%')</if>
+            <if test="regStatus != null ">and reg_status = #{regStatus}</if>
+        </where>
+    </select>
+
+    <select id="selectDeviceUserRegisterByRegId" parameterType="Long" resultMap="DeviceUserRegisterResult">
+        <include refid="selectDeviceUserRegisterVo"/>
+        where reg_id = #{regId}
+    </select>
+
+    <insert id="insertDeviceUserRegister" parameterType="DeviceUserRegister" useGeneratedKeys="true"
+            keyProperty="regId">
+        insert into device_user_register
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="regDeptId != null">reg_dept_id,</if>
+            <if test="regDept != null and regDept != ''">reg_dept,</if>
+            <if test="regCode != null and regCode != ''">reg_code,</if>
+            <if test="regName != null and regName != ''">reg_name,</if>
+            <if test="regMobile != null and regMobile != ''">reg_mobile,</if>
+            <if test="regPassword != null">reg_password,</if>
+            <if test="regOpenid != null">reg_openid,</if>
+            <if test="regStatus != null">reg_status,</if>
+            <if test="regRemark != null">reg_remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="regDeptId != null">#{regDeptId},</if>
+            <if test="regDept != null and regDept != ''">#{regDept},</if>
+            <if test="regCode != null and regCode != ''">#{regCode},</if>
+            <if test="regName != null and regName != ''">#{regName},</if>
+            <if test="regMobile != null and regMobile != ''">#{regMobile},</if>
+            <if test="regPassword != null">#{regPassword},</if>
+            <if test="regOpenid != null">#{regOpenid},</if>
+            <if test="regStatus != null">#{regStatus},</if>
+            <if test="regRemark != null">#{regRemark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateDeviceUserRegister" parameterType="DeviceUserRegister">
+        update device_user_register
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="regDeptId != null">reg_dept_id = #{regDeptId},</if>
+            <if test="regDept != null and regDept != ''">reg_dept = #{regDept},</if>
+            <if test="regCode != null and regCode != ''">reg_code = #{regCode},</if>
+            <if test="regName != null and regName != ''">reg_name = #{regName},</if>
+            <if test="regMobile != null and regMobile != ''">reg_mobile = #{regMobile},</if>
+            <if test="regPassword != null">reg_password = #{regPassword},</if>
+            <if test="regOpenid != null">reg_openid = #{regOpenid},</if>
+            <if test="regStatus != null">reg_status = #{regStatus},</if>
+            <if test="regRemark != null">reg_remark = #{regRemark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where reg_id = #{regId}
+    </update>
+
+    <delete id="deleteDeviceUserRegisterByRegId" parameterType="Long">
+        delete
+        from device_user_register
+        where reg_id = #{regId}
+    </delete>
+    <!--单个删除-->
+    <!--    批量删除-->
+    <delete id="deleteDeviceUserRegisterByRegIds" parameterType="String">
+        delete from device_user_register where reg_id in
+
+        <foreach item="regId" collection="array" open="(" separator="," close=")">
+            #{regId}
+        </foreach>
+    </delete>
+</mapper>

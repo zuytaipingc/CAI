@@ -106,7 +106,7 @@ public class DeviceInfoController extends BaseController {
      * @param deviceInfo 查询条件
      */
     @PostMapping("/export")
-    public void export(HttpServletResponse response,DeviceInfo deviceInfo){
+    public void export(HttpServletResponse response,@RequestBody DeviceInfo deviceInfo){
         //多条件查询需要导出的数据
         List<DeviceInfo> deviceInfos = deviceInfoService.selectDeviceInfo(deviceInfo);
         //创建导出的工具类对象
