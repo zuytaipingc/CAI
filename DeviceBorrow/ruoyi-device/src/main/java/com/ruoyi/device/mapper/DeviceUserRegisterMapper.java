@@ -58,4 +58,12 @@ public interface DeviceUserRegisterMapper
      * @return 结果
      */
     public int deleteDeviceUserRegisterByRegIds(Long[] regIds);
+
+    /**
+     * 根据学号/工号查询
+     * @param regCode
+     * @return
+     */
+
+    List<DeviceUserRegister> selectDeviceUserRegisterByCode(String regCode);
 }

@@ -19,6 +19,7 @@
         <result property="createTime" column="create_time"/>
         <result property="updateBy" column="update_by"/>
         <result property="updateTime" column="update_time"/>
+        <result property="approveName" column="user_name"></result>
     </resultMap>
 
     <sql id="selectDeviceUserRegisterVo">
@@ -38,9 +39,32 @@
                update_time
         from device_user_register
     </sql>
+    <!--    根据学号/工号查询-->
+    <select id="selectDeviceUserRegisterByCode" parameterType="string" resultMap="DeviceUserRegisterResult">
+        <include refid="selectDeviceUserRegisterVo"></include>
+        where reg_code=#{regCode}
+    </select>
 
+    <!--    用户列表查询-->
     <select id="selectDeviceUserRegisterList" parameterType="DeviceUserRegister" resultMap="DeviceUserRegisterResult">
-        <include refid="selectDeviceUserRegisterVo"/>
+        <!--        <include refid="selectDeviceUserRegisterVo"/>-->
+        select reg_id,
+        reg_dept_id,
+        reg_dept,
+        reg_code,
+        reg_name,
+        reg_mobile,
+        reg_password,
+        reg_openid,
+        reg_status,
+        reg_remark,
+        r.create_by,
+        r.create_time,
+        r.update_by,
+        r.update_time,
+        u.user_name
+        from device_user_register r
+        LEFT JOIN sys_user u ON r.update_by=u.user_id
         <where>
             <if test="regCode != null  and regCode != ''">and reg_code = #{regCode}</if>
             <if test="regName != null  and regName != ''">and reg_name like concat('%', #{regName}, '%')</if>

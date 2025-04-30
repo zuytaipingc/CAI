@@ -81,7 +81,7 @@
   
       <el-table v-loading="loading" :data="registerList" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="主键" align="center" prop="regId" />
+        <!-- <el-table-column label="主键" align="center" prop="regId" /> -->
         <el-table-column label="部门/班级" align="center" prop="regDept" />
         <el-table-column label="工号/学号" align="center" prop="regCode" />
         <el-table-column label="姓名" align="center" prop="regName" />
@@ -91,6 +91,7 @@
             <dict-tag :options="dict.type.device_reg_status" :value="scope.row.regStatus"/>
           </template>
         </el-table-column>
+        <el-table-column label="审核人" align="center" prop="approveName" />
         <el-table-column label="审核说明" align="center" prop="regRemark" />
         <el-table-column label="创建时间" align="center" prop="createTime" width="180">
           <template slot-scope="scope">
@@ -113,6 +114,14 @@
               @click="handleDelete(scope.row)"
               v-hasPermi="['device:register:remove']"
             >删除</el-button>
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-edit"
+              @click="handleApprove(scope.row)"
+              v-hasPermi="['device:register:approve']"
+              v-if="scope.row.regStatus != 1"
+              >审核</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -167,6 +176,40 @@
           <el-button @click="cancel">取 消</el-button>
         </div>
       </el-dialog>
+
+      <!-- 审核app用户对话框 -->
+      <el-dialog title="审核app用户" :visible.sync="isApprove" width="500px" append-to-body>
+        <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+          <el-form-item label="部门/班级" prop="regDept">
+            <el-input v-model="form.regDept" placeholder="请输入部门/班级" disabled/>
+          </el-form-item>
+          <el-form-item label="工号/学号" prop="regCode">
+            <el-input v-model="form.regCode" placeholder="请输入工号/学号" disabled/>
+          </el-form-item>
+          <el-form-item label="姓名" prop="regName">
+            <el-input v-model="form.regName" placeholder="请输入姓名" disabled/>
+          </el-form-item>
+          <el-form-item label="手机号码" prop="regMobile">
+            <el-input v-model="form.regMobile" placeholder="请输入手机号码" disabled/>
+          </el-form-item>
+          <el-form-item label="注册状态" prop="regStatus">
+            <el-radio-group v-model="form.regStatus">
+              <el-radio
+                v-for="dict in dict.type.device_reg_status"
+                :key="dict.value"
+                :label="parseInt(dict.value)"
+              >{{dict.label}}</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="审核说明" prop="regRemark">
+            <el-input v-model="form.regRemark" placeholder="请输入审核说明" />
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button type="primary" @click="submitFormByApprove">确 定</el-button>
+          <el-button @click="cancelByApprove">取 消</el-button>
+        </div>
+      </el-dialog>
     </div>
   </template>
   
@@ -178,6 +221,7 @@
     dicts: ['device_reg_status'],
     data() {
       return {
+      isApprove:false,//控制审核对话框的显示和隐藏
         // 遮罩层
         loading: true,
         // 选中数组
@@ -227,6 +271,36 @@
       this.getList();
     },
     methods: {
+      //审核对话框中的取消按钮
+      cancelByApprove(){
+        this.isApprove = false;
+        this.reset();
+      },
+       /** 审核 提交按钮 */
+       submitFormByApprove() {
+        this.$refs["form"].validate(valid => {
+          if (valid) {
+            // 调用后端接口：修改接口
+              updateRegister(this.form).then(response => {
+                this.$modal.msgSuccess("审核成功");
+                this.isApprove = false;//关闭审核对话框
+                this.getList();
+              });
+            } 
+          });
+        },
+       /** 审核按钮操作 */
+       handleApprove(row) {
+        this.reset();//重置表单对象
+        const regId = row.regId || this.ids//获取用户id
+        // 请求后端接口（根据id查询），获取数据
+        getRegister(regId).then(response => {
+          this.form = response.data;//表单对象赋值
+          //获取当前登录的用户id：存储vuex
+          this.form.updateBy = this.$store.state.user.id
+          this.isApprove = true;//打开审核对话框
+        });
+      },
       /** 查询app用户列表 */
       getList() {
         this.loading = true;

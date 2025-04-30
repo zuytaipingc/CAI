@@ -58,4 +58,12 @@ public interface IDeviceUserRegisterService
      * @return 结果
      */
     public int deleteDeviceUserRegisterByRegId(Long regId);
+
+    /**
+     * 根据学号/工号查询
+     * @param regCode 学号/工号
+     * @return
+     */
+
+    List<DeviceUserRegister> selectDeviceUserRegisterByCode(String regCode);
 }

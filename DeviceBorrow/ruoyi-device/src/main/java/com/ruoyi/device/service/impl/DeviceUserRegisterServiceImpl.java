@@ -93,4 +93,9 @@ public class DeviceUserRegisterServiceImpl implements IDeviceUserRegisterService
     {
         return deviceUserRegisterMapper.deleteDeviceUserRegisterByRegId(regId);
     }
+
+    @Override
+    public List<DeviceUserRegister> selectDeviceUserRegisterByCode(String regCode) {
+        return deviceUserRegisterMapper.selectDeviceUserRegisterByCode(regCode);
+    }
 }
