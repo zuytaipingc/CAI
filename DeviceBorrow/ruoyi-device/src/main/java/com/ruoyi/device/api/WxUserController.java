@@ -56,7 +56,6 @@ public class WxUserController extends BaseController {
     /**
      * 小程序用户登录
      * 请求方法POST 路径http://localhost:8080/wechat/login
-     *
      * @param code 微信登录密码
      * @param userName 工号/学号
      * @param password 密码

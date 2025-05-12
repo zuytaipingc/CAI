@@ -2,6 +2,8 @@ package com.ruoyi.device.controller;
 
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
+
+import com.ruoyi.common.annotation.Anonymous;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +35,18 @@ public class DeviceUserRegisterController extends BaseController
 {
     @Autowired
     private IDeviceUserRegisterService deviceUserRegisterService;
+    /**
+     * 查询小程序用户所有数据
+     * @
+     */
+    @GetMapping("all")
+    @Anonymous
+    public TableDataInfo all(DeviceUserRegister deviceUserRegister){
+        //调用业务层接口，获取数据
+        List<DeviceUserRegister> list = deviceUserRegisterService.selectDeviceUserRegisterList(deviceUserRegister);
+        //响应数据
+        return getDataTable(list);
+    }
 
     /**
      * 查询app用户列表

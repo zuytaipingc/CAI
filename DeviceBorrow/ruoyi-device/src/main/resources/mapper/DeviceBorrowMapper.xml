@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.device.mapper.DeviceBorrowMapper">
+    <!--    结果映射 手动映射-->
+<!--    列表来自的数据。来自多表-->
+<!--    1.使用多变表联查：使用join联查，大厂禁止使用 执行一次sql语句
+        2.将多表查询转换成单表查询。先查询借用信息，然后根据用户id查询用户信息，根据设备id查询设备信息  执行多次sql
+
+-->
+
+    <resultMap type="DeviceBorrow" id="DeviceBorrowResult">
+        <result property="borrowId" column="borrow_id"/>
+        <result property="deviceId" column="device_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="borrowTime" column="borrow_time"/>
+        <result property="borrowRemark" column="borrow_remark"/>
+        <result property="returnTime" column="return_time"/>
+        <result property="returnStatus" column="return_status"/>
+        <result property="returnRemark" column="return_remark"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+
+<!-- association:一对一查询 ,property:类中属性，column：关联的字段，select引用根据id查询-->
+
+        <association property="user" column="user_id"
+                      select="com.ruoyi.device.mapper.DeviceUserRegisterMapper.selectDeviceUserRegisterByRegId"></association>
+        <association property="device" column="device_id"
+                     select="com.ruoyi.device.mapper.DeviceInfoMapper.selectDeviceInfoById"></association>
+    </resultMap>
+    <!--    sql片段 基础查询语句-->
+
+    <sql id="selectDeviceBorrowVo">
+        select borrow_id,device_id,user_id,borrow_time,borrow_remark,return_time,return_status,return_remark,create_by,create_time,update_by,update_time from device_borrow
+    </sql>
+
+    <!--    多条件查询-->
+
+    <select id="selectDeviceBorrowList" parameterType="DeviceBorrow" resultMap="DeviceBorrowResult">
+        <include refid="selectDeviceBorrowVo"/>
+        <where>
+            <if test="deviceId != null ">and device_id = #{deviceId}</if>
+            <if test="userId != null ">and user_id = #{userId}</if>
+<!--            <if test="borrowTime != null ">and borrow_time = #{borrowTime}</if>-->
+            <if test="beginBorrowTime != null">and borrow_time >= #{beginBorrowTime}</if>
+            <if test="endBorrowTime != null">and borrow_time &lt;= #{endBorrowTime}</if>
+            <if test="returnStatus != null ">and return_status = #{returnStatus}</if>
+        </where>
+    </select>
+    <!--    根据id查询-->
+
+    <select id="selectDeviceBorrowByBorrowId" parameterType="Long" resultMap="DeviceBorrowResult">
+        <include refid="selectDeviceBorrowVo"/>
+        where borrow_id = #{borrowId}
+    </select>
+
+    <insert id="insertDeviceBorrow" parameterType="DeviceBorrow" useGeneratedKeys="true" keyProperty="borrowId">
+        insert into device_borrow
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deviceId != null">device_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="borrowTime != null">borrow_time,</if>
+            <if test="borrowRemark != null">borrow_remark,</if>
+            <if test="returnTime != null">return_time,</if>
+            <if test="returnStatus != null">return_status,</if>
+            <if test="returnRemark != null">return_remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deviceId != null">#{deviceId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="borrowTime != null">#{borrowTime},</if>
+            <if test="borrowRemark != null">#{borrowRemark},</if>
+            <if test="returnTime != null">#{returnTime},</if>
+            <if test="returnStatus != null">#{returnStatus},</if>
+            <if test="returnRemark != null">#{returnRemark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateDeviceBorrow" parameterType="DeviceBorrow">
+        update device_borrow
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="deviceId != null">device_id = #{deviceId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="borrowTime != null">borrow_time = #{borrowTime},</if>
+            <if test="borrowRemark != null">borrow_remark = #{borrowRemark},</if>
+            <if test="returnTime != null">return_time = #{returnTime},</if>
+            <if test="returnStatus != null">return_status = #{returnStatus},</if>
+            <if test="returnRemark != null">return_remark = #{returnRemark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where borrow_id = #{borrowId}
+    </update>
+
+    <delete id="deleteDeviceBorrowByBorrowId" parameterType="Long">
+        delete
+        from device_borrow
+        where borrow_id = #{borrowId}
+    </delete>
+
+    <delete id="deleteDeviceBorrowByBorrowIds" parameterType="String">
+        delete from device_borrow where borrow_id in
+        <foreach item="borrowId" collection="array" open="(" separator="," close=")">
+            #{borrowId}
+        </foreach>
+    </delete>
+</mapper>

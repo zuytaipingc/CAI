@@ -28,6 +28,20 @@ public class DeviceInfoController extends BaseController {
     private IDeviceInfoService deviceInfoService;
 
     /**
+     * 查询所有设备信息
+     * 请求路径：http://localhost:8080/device/info/all
+     * @return 响应的数据
+     */
+    @GetMapping("all")
+    public TableDataInfo all(DeviceInfo deviceInfo){
+        //调用业务层，获取数据
+        List<DeviceInfo> list = deviceInfoService.selectDeviceInfo(deviceInfo);
+        //响应数据
+        return getDataTable(list);
+    }
+
+
+    /**
      * 设备信息的新增接口
      * 请求方式POST，路径：http://localhost:8080/device/info
      * @param deviceInfo 设备信息
