@@ -70,14 +70,14 @@ public class DeviceBorrowController extends BaseController
     }
 
     /**
-     * 新增借用信息
+     * 新增借用信息（快速借出）
      */
     @PreAuthorize("@ss.hasPermi('device:borrow:add')")
     @Log(title = "借用信息", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody DeviceBorrow deviceBorrow)
     {
-        return toAjax(deviceBorrowService.insertDeviceBorrow(deviceBorrow));
+        return (deviceBorrowService.insertDeviceBorrow(deviceBorrow));
     }
 
     /**

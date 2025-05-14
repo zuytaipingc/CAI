@@ -1,6 +1,8 @@
 package com.ruoyi.device.service;
 
 import java.util.List;
+
+import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.device.domain.DeviceBorrow;
 
 /**
@@ -33,7 +35,7 @@ public interface IDeviceBorrowService
      * @param deviceBorrow 借用信息
      * @return 结果
      */
-    public int insertDeviceBorrow(DeviceBorrow deviceBorrow);
+    public AjaxResult insertDeviceBorrow(DeviceBorrow deviceBorrow);
 
     /**
      * 修改借用信息

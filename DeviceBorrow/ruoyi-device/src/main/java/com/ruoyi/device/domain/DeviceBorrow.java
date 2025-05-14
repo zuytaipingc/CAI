@@ -96,8 +96,22 @@ public class DeviceBorrow extends BaseEntity {
      */
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date endBorrowTime;
+    /**
+     * 设备状态：用于接受页面的数据
+     */
+    private Integer deviceStatus;
+
 
 //    生成getter和setter方法
+
+
+    public Integer getDeviceStatus() {
+        return deviceStatus;
+    }
+
+    public void setDeviceStatus(Integer deviceStatus) {
+        this.deviceStatus = deviceStatus;
+    }
 
     public DeviceUserRegister getUser() {
         return user;

@@ -53,6 +53,10 @@
                 <el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport"
                     v-hasPermi="['device:borrow:export']">导出</el-button>
             </el-col>
+            <el-col :span="1.5">
+                <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAddByFast"
+                    v-hasPermi="['device:borrow:add']">快速借出</el-button>
+            </el-col>
             <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
         </el-row>
 
@@ -96,6 +100,8 @@
                         v-hasPermi="['device:borrow:edit']">修改</el-button>
                     <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
                         v-hasPermi="['device:borrow:remove']">删除</el-button>
+                    <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdateByFast(scope.row)"
+                        v-hasPermi="['device:borrow:edit']" v-if="scope.row.returnStatus != 3">快速归还</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -140,18 +146,89 @@
                 <el-button @click="cancel">取 消</el-button>
             </div>
         </el-dialog>
+        <!-- 快速借出（新增）快速归还（修改）对话框 -->
+
+        <el-dialog :title="title" :visible.sync="fast" width="40%" append-to-body>
+            <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+                <el-form-item label="设备" prop="deviceId">
+                    <el-select v-model="form.deviceId" placeholder="请选择设备" :disabled="form.borrowId != null" filterable
+                        clearable style="width: 100%">
+                        <el-option v-for="device in deviceInfoList" :key="device.deviceId" :label="device.deviceName"
+                            :value="device.deviceId"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="借用用户" prop="userId">
+                    <el-select v-model="form.userId" placeholder="请选择借用者" :disabled="form.borrowId!= null" filterable
+                        clearable style="width: 100%">
+                        <el-option v-for="user in deviceUserList" :key="user.regId" :label="user.regName"
+                            :value="user.regId" />
+                    </el-select>
+
+                </el-form-item>
+                <el-form-item label="借用时间" prop="borrowTime">
+                    <el-date-picker clearable v-model="form.borrowTime" type="date" value-format="yyyy-MM-dd"
+                        style="width: 100%" :disabled="form.borrowId!= null" placeholder="请选择借用时间">
+                    </el-date-picker>
+                </el-form-item>
+                <el-form-item label="借用说明" prop="borrowRemark">
+                    <el-input v-model="form.borrowRemark" :disabled="form.borrowId!= null" placeholder="请输入借用说明" />
+                </el-form-item>
+                <!-- 归还时间：表单验证，不能早于借用时间 -->
+                <el-form-item label="归还时间" prop="returnTime">
+                    <el-date-picker clearable v-model="form.returnTime" type="date" value-format="yyyy-MM-dd"
+                        style="width: 100%" placeholder="请选择计划归还时间">
+                    </el-date-picker>
+                </el-form-item>
+                <!-- 快速借用：归还状态：归还状态1（未借出）、快速归还：归还状态3（已归还） -->
+                <!-- <el-form-item label="归还状态" prop="returnStatus">
+                    <el-radio-group v-model="form.returnStatus">
+                        <el-radio v-for="dict in dict.type.device_return_status" :key="dict.value"
+                            :label="parseInt(dict.value)">{{ dict.label }}</el-radio>
+                    </el-radio-group>
+                </el-form-item>-->
+                <el-form-item label="设备状态" prop="deviceStatus" v-if="form.borrowId != null">
+                    <el-select v-model="form.deviceStatus" placeholder="设备状态" clearable>
+                        <el-option label="正常" :value="0"></el-option>
+                        <!-- <el-option label="借出" :value="1"></el-option> -->
+                        <el-option label="维修" :value="2"></el-option>
+                        <el-option label="废弃" :value="-1"></el-option>
+                    </el-select>
+                </el-form-item>
+
+                <el-form-item label="归还说明" prop="returnRemark" v-if="form.borrowId != null">
+                    <el-input v-model="form.returnRemark" placeholder="请输入归还说明" />
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="submitFormByFast">确 定</el-button>
+                <el-button @click="cancelByFast">取 消</el-button>
+            </div>
+        </el-dialog>
     </div>
 </template>
 
 <script>
 import { listBorrow, getBorrow, delBorrow, addBorrow, updateBorrow } from "@/api/device/borrow";
 import axios from "axios";
-
+import { from } from "core-js/stable/array";
+import { th } from "element-plus/es/locales.mjs";
 export default {
     name: "Borrow",
     dicts: ['device_return_status'],
     data() {
+        // 自定义验证，验证归还时间
+        var checkReturnTime = (rule, value, callback) => {
+            if (value === null) {
+                callback(new Error('归还时间不能为空！'));//验证未通过
+            } else if (this.form.borrowTime > value) {
+                callback(new Error('归还时间不能早于借用时间!'));//验证未通过
+            } else {
+                callback();
+            }
+        };
+
         return {
+            fast: false,//控制快速对话框的显示和隐藏
             // 遮罩层
             loading: true,
             // 选中数组
@@ -189,41 +266,90 @@ export default {
             // 表单校验
             rules: {
                 deviceId: [
-                    { required: true, message: "设备id不能为空", trigger: "blur" }
+                    { required: true, message: "设备不能为空", trigger: "change" }
                 ],
                 userId: [
-                    { required: true, message: "借用用户id不能为空", trigger: "blur" }
+                    { required: true, message: "借用用户不能为空", trigger: "change" }
                 ],
                 borrowTime: [
-                    { required: true, message: "借用时间不能为空", trigger: "blur" }
+                    { required: true, message: "借用时间不能为空", trigger: "change" }
                 ],
                 returnStatus: [
                     { required: true, message: "归还状态不能为空", trigger: "change" }
+                ],
+                returnTime: [
+                    { required: true, validator: checkReturnTime, trigger: "change" }
                 ],
             }
         };
     },
     created() {
         this.getList();
-        //调用后端接口，获取小程序用户列表
-        axios.get("http://localhost:8080/device/register/all")
-            .then(response => {
-                this.deviceUserList = response.data.rows
-            }).catch(err => {
-                console.log(err);
-
-            })
-        //调用后端接口：获取设备列表
-        axios.get("http://localhost:8080/device/info/all")
-            .then(response => {
-                this.deviceInfoList = response.data.rows
-            }).catch(err => {
-                console.log(err);
-
-            })
 
     },
     methods: {
+        /** 快速归还 按钮操作 */
+        handleUpdateByFast(row) {
+            this.reset();//清空表单
+            const borrowId = row.borrowId || this.ids//获取id
+            //   调用后端接口
+            getBorrow(borrowId).then(response => {
+                this.form = response.data;
+                this.fast = true;
+                this.title = "快速归还";
+            });
+        },
+
+        /** 快速借出 提交按钮 */
+        submitFormByFast() {
+            //归还状态：赋值，表单验证
+            this.form.returnStatus = 1
+            this.$refs["form"].validate(valid => {//表单验证
+                if (valid) {//验证通过
+                    // 快速归还操作
+                    if (this.form.borrowId != null) {
+                        //设置归还状态为3：已归还
+                        this.form.returnStatus = 3
+                        updateBorrow(this.form).then(response => {
+                            this.$modal.msgSuccess("快速归还成功");
+                            this.fast = false;
+                            this.getList();
+                        });
+                    } else {
+                        // 快速借用操作
+                        //设置归还状态为1：未归还
+                        this.form.returnStatus = 1
+                        addBorrow(this.form).then(response => {
+                            this.$modal.msgSuccess("快速借用成功");
+                            this.fast = false;
+                            this.getList();
+                        });
+                    }
+                }
+            });
+        },
+
+        // 快速借出 取消按钮
+        cancelByFast() {
+            this.fast = false;//关闭对话框
+            this.reset();//清空表单
+            this.getList()
+        },
+
+        /** 快速借出按钮操作 */
+        handleAddByFast() {
+            this.reset();//清空表单
+            this.fast = true;//打开快速借用的对话框
+            this.title = "快速借用";
+            //查询状态设备为0的设备信息：设备都是正常的，可以借出
+            axios.get("http://localhost:8080/device/info/all?deviceStatus=0")
+                .then(response => {
+                    this.deviceInfoList = response.data.rows
+                }).catch(err => {
+                    console.log(err);
+
+                })
+        },
         /** 查询借用信息列表 */
         getList() {
             this.loading = true;
@@ -232,6 +358,23 @@ export default {
                 this.total = response.total;
                 this.loading = false;
             });
+            //调用后端接口，获取小程序用户列表
+            axios.get("http://localhost:8080/device/register/all")
+                .then(response => {
+                    this.deviceUserList = response.data.rows
+                }).catch(err => {
+                    console.log(err);
+
+                })
+            //调用后端接口：获取设备列表
+            axios.get("http://localhost:8080/device/info/all")
+                .then(response => {
+                    this.deviceInfoList = response.data.rows
+                }).catch(err => {
+                    console.log(err);
+
+                })
+
         },
         // 取消按钮
         cancel() {
