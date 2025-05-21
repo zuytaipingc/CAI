@@ -18,7 +18,7 @@ import java.util.List;
  * 小程序用户控制器：注册接口、登录接口
  */
 @RestController//标记未控制器
-@RequestMapping("/wechat")
+@RequestMapping("/wechart")
 @Anonymous//匿名访问
 public class WxUserController extends BaseController {
     //    注入业务层
